@@ -7,7 +7,9 @@ import java.util.concurrent.Executors;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class ShutdownerTest {
+import static com.github.taivokasper.executor.shutdowner.WorkHelpers.whileTrueSleep;
+
+public class ShutdownerSingleThreadTest {
   @Test
   public void testSingleShutdownImmediate() throws Exception {
     ExecutorService executorService = Executors.newSingleThreadExecutor();
@@ -21,16 +23,7 @@ public class ShutdownerTest {
   @Test(expected = InterruptedException.class)
   public void testSingleShutdownImmediateInterruption() throws Exception {
     ExecutorService executorService = Executors.newSingleThreadExecutor();
-    CompletableFuture<Exception> future = CompletableFuture.supplyAsync(() -> {
-      while (true) {
-        try {
-          Thread.sleep(50);
-        }
-        catch (InterruptedException e) {
-          return e;
-        }
-      }
-    }, executorService);
+    CompletableFuture<Exception> future = CompletableFuture.supplyAsync(whileTrueSleep, executorService);
 
     Shutdowner.create()
         .addShutdownItem(executorService)
