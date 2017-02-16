@@ -10,22 +10,28 @@ import org.junit.Test;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-public class ShutdownerMultiThreadPoolTest {
+public class MultiThreadPoolTest {
+
   @Test
   public void testShutdownImmediate() throws Exception {
     ExecutorService executorService1 = Executors.newSingleThreadExecutor();
     ExecutorService executorService2 = Executors.newSingleThreadExecutor();
     ExecutorService executorService3 = Executors.newSingleThreadExecutor();
 
-    Shutdowner.create()
+    ShutdownFactory.createBlocking()
         .addShutdownItem(executorService1)
         .addShutdownItem(executorService2)
         .addShutdownItem(executorService3)
-        .startShutdown();
+        .terminate();
 
-    AssertHelpers.assertShutdownTerminated(executorService1);
-    AssertHelpers.assertShutdownTerminated(executorService2);
-    AssertHelpers.assertShutdownTerminated(executorService3);
+    Assert.assertTrue(executorService1.isShutdown());
+    Assert.assertTrue(executorService1.isTerminated());
+
+    Assert.assertTrue(executorService2.isShutdown());
+    Assert.assertTrue(executorService2.isTerminated());
+
+    Assert.assertTrue(executorService3.isShutdown());
+    Assert.assertTrue(executorService3.isTerminated());
   }
 
   @Test
@@ -40,12 +46,12 @@ public class ShutdownerMultiThreadPoolTest {
     CompletableFuture<Long> future3 = CompletableFuture.supplyAsync(WorkHelpers.runtimeMeasurer, executorService3);
     CompletableFuture<Long> future4 = CompletableFuture.supplyAsync(WorkHelpers.runtimeMeasurer, executorService4);
 
-    Shutdowner.create()
+    ShutdownFactory.createBlocking()
         .addShutdownItem(executorService1, 1, SECONDS)
         .addShutdownItem(executorService2, 3, SECONDS)
         .addShutdownItem(executorService3, 2, SECONDS)
         .addShutdownItem(executorService4)
-        .startShutdown();
+        .terminate();
 
     Long[] futureEndTimes = { future1.get(), future2.get(), future3.get(), future4.get() };
     Arrays.sort(futureEndTimes);
@@ -56,9 +62,16 @@ public class ShutdownerMultiThreadPoolTest {
     Assert.assertEquals(future3.get(), futureEndTimes[2]);
     Assert.assertEquals(future4.get(), futureEndTimes[0]);
 
-    AssertHelpers.assertShutdownTerminated(executorService1);
-    AssertHelpers.assertShutdownTerminated(executorService2);
-    AssertHelpers.assertShutdownTerminated(executorService3);
-    AssertHelpers.assertShutdownTerminated(executorService4);
+    Assert.assertTrue(executorService1.isShutdown());
+    Assert.assertTrue(executorService1.isTerminated());
+
+    Assert.assertTrue(executorService2.isShutdown());
+    Assert.assertTrue(executorService2.isTerminated());
+
+    Assert.assertTrue(executorService3.isShutdown());
+    Assert.assertTrue(executorService3.isTerminated());
+
+    Assert.assertTrue(executorService4.isShutdown());
+    Assert.assertTrue(executorService4.isTerminated());
   }
 }

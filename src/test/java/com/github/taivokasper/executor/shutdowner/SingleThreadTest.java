@@ -9,13 +9,13 @@ import org.junit.Test;
 
 import static com.github.taivokasper.executor.shutdowner.WorkHelpers.whileTrueSleep;
 
-public class ShutdownerSingleThreadTest {
+public class SingleThreadTest {
   @Test
   public void testSingleShutdownImmediate() throws Exception {
     ExecutorService executorService = Executors.newSingleThreadExecutor();
-    Shutdowner.create()
+    ShutdownFactory.createBlocking()
         .addShutdownItem(executorService)
-        .startShutdown();
+        .terminate();
     Assert.assertTrue(executorService.isShutdown());
     Assert.assertTrue(executorService.isTerminated());
   }
@@ -25,12 +25,13 @@ public class ShutdownerSingleThreadTest {
     ExecutorService executorService = Executors.newSingleThreadExecutor();
     CompletableFuture<Exception> future = CompletableFuture.supplyAsync(whileTrueSleep, executorService);
 
-    Shutdowner.create()
+    ShutdownFactory.createBlocking()
         .addShutdownItem(executorService)
-        .startShutdown();
+        .terminate();
 
     Assert.assertTrue(executorService.isShutdown());
-    Assert.assertTrue(executorService.isTerminated());
+    // There is no time to fully terminate
+    Assert.assertFalse(executorService.isTerminated());
     throw future.get();
   }
 }
