@@ -46,26 +46,36 @@ class BlockingShutdownHelper implements ShutdownHelper {
       executorWrapper.executorService.shutdown();
     }
 
-    for (ExecutorWrapper executorWrapper : executorWrappers) {
-      if (timeLeft > 0) {
-        long minAwait = Math.min(timeLeft, executorWrapper.timeUnit.toNanos(executorWrapper.time));
-        long start = System.nanoTime();
-        executorWrapper.executorService.awaitTermination(minAwait, NANOSECONDS);
-        timeLeft -= (System.nanoTime() - start);
-      }
-      executorWrapper.executorService.shutdownNow();
-    }
-
-    if (timeLeft > 0) {
+    try {
       for (ExecutorWrapper executorWrapper : executorWrappers) {
-        if (timeLeft <= 0) {
-          break;
+        if (timeLeft > 0) {
+          long minAwait = Math.min(timeLeft, executorWrapper.timeUnit.toNanos(executorWrapper.time));
+          long start = System.nanoTime();
+          executorWrapper.executorService.awaitTermination(minAwait, NANOSECONDS);
+          timeLeft -= (System.nanoTime() - start);
         }
-        long minAwait = Math.min(timeLeft, executorWrapper.timeUnit.toNanos(executorWrapper.time));
-        long start = System.nanoTime();
-        executorWrapper.executorService.awaitTermination(minAwait, NANOSECONDS);
-        timeLeft -= (System.nanoTime() - start);
+        executorWrapper.executorService.shutdownNow();
       }
+
+      if (timeLeft > 0) {
+        for (ExecutorWrapper executorWrapper : executorWrappers) {
+          if (timeLeft <= 0) {
+            break;
+          }
+          long minAwait = Math.min(timeLeft, executorWrapper.timeUnit.toNanos(executorWrapper.time));
+          long start = System.nanoTime();
+          executorWrapper.executorService.awaitTermination(minAwait, NANOSECONDS);
+          timeLeft -= (System.nanoTime() - start);
+        }
+      }
+    }
+    catch (InterruptedException ie) {
+      // If current thread is interrupted then interrupt all others if was supposed to shutdown properly
+      for (ExecutorWrapper executorWrapper : executorWrappers) {
+        executorWrapper.executorService.shutdownNow();
+      }
+      // Preserve interrupt status
+      Thread.currentThread().interrupt();
     }
   }
 }
