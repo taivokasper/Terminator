@@ -13,7 +13,7 @@ public class SingleThreadTest {
   @Test
   public void testSingleShutdownImmediate() throws Exception {
     ExecutorService executorService = Executors.newSingleThreadExecutor();
-    ShutdownFactory.createBlocking()
+    ShutdownFactory.createMultiTimeoutContainer()
         .addShutdownItem(executorService)
         .terminate();
     Assert.assertTrue(executorService.isShutdown());
@@ -25,13 +25,11 @@ public class SingleThreadTest {
     ExecutorService executorService = Executors.newSingleThreadExecutor();
     CompletableFuture<Exception> future = CompletableFuture.supplyAsync(whileTrueSleep, executorService);
 
-    ShutdownFactory.createBlocking()
+    ShutdownFactory.createMultiTimeoutContainer()
         .addShutdownItem(executorService)
         .terminate();
 
     Assert.assertTrue(executorService.isShutdown());
-    // There is no time to fully terminate
-    Assert.assertFalse(executorService.isTerminated());
     throw future.get();
   }
 }

@@ -15,7 +15,7 @@ public class CurrentThreadInterruptionTest {
 
     Thread.currentThread().interrupt();
 
-    ShutdownFactory.createBlocking()
+    ShutdownFactory.createMultiTimeoutContainer()
         .addShutdownItem(executorService)
         .terminate();
 

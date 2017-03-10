@@ -18,7 +18,7 @@ public class MultiThreadPoolTest {
     ExecutorService executorService2 = Executors.newSingleThreadExecutor();
     ExecutorService executorService3 = Executors.newSingleThreadExecutor();
 
-    ShutdownFactory.createBlocking()
+    ShutdownFactory.createMultiTimeoutContainer()
         .addShutdownItem(executorService1)
         .addShutdownItem(executorService2)
         .addShutdownItem(executorService3)
@@ -46,7 +46,7 @@ public class MultiThreadPoolTest {
     CompletableFuture<Long> future3 = CompletableFuture.supplyAsync(WorkHelpers.runtimeMeasurer, executorService3);
     CompletableFuture<Long> future4 = CompletableFuture.supplyAsync(WorkHelpers.runtimeMeasurer, executorService4);
 
-    ShutdownFactory.createBlocking()
+    ShutdownFactory.createMultiTimeoutContainer()
         .addShutdownItem(executorService1, 1, SECONDS)
         .addShutdownItem(executorService2, 3, SECONDS)
         .addShutdownItem(executorService3, 2, SECONDS)

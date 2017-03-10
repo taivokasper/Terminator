@@ -9,23 +9,62 @@ import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.TimeUnit.*;
 
-class BlockingShutdownHelper implements ShutdownHelper {
+class Shutdowner implements MultiTimeoutExecutorServiceContainer, SingleTimeoutExecutorServiceContainer {
   private final List<ExecutorWrapper> executorWrappers;
 
-  BlockingShutdownHelper() {
-    executorWrappers = new ArrayList<ExecutorWrapper>();
+  Shutdowner(List<ExecutorWrapper> list) {
+    this.executorWrappers = list;
   }
 
   @Override
-  public synchronized ShutdownHelper addShutdownItem(ExecutorService executorService) {
+  public synchronized Shutdowner addShutdownItem(ExecutorService executorService) {
     executorWrappers.add(new ExecutorWrapper(executorService, 0, SECONDS));
     return this;
   }
 
   @Override
-  public synchronized ShutdownHelper addShutdownItem(ExecutorService executorService, long time, TimeUnit timeUnit) {
+  public synchronized Shutdowner addShutdownItem(ExecutorService executorService, long time, TimeUnit timeUnit) {
     executorWrappers.add(new ExecutorWrapper(executorService, time, timeUnit));
     return this;
+  }
+
+  @Override
+  public synchronized void terminate(long time, TimeUnit timeUnit) throws InterruptedException {
+    List<ExecutorWrapper> executorWrappers = new ArrayList<ExecutorWrapper>(this.executorWrappers);
+    for (ExecutorWrapper executorWrapper : executorWrappers) {
+      executorWrapper.executorService.shutdown();
+    }
+
+    long timeLeft = timeUnit.toNanos(time);
+    try {
+      for (ExecutorWrapper executorWrapper : executorWrappers) {
+        if (timeLeft > 0) {
+          long start = System.nanoTime();
+          executorWrapper.executorService.awaitTermination(timeLeft, NANOSECONDS);
+          timeLeft -= (System.nanoTime() - start);
+        }
+        executorWrapper.executorService.shutdownNow();
+      }
+
+      if (timeLeft > 0) {
+        for (ExecutorWrapper executorWrapper : executorWrappers) {
+          if (timeLeft <= 0) {
+            break;
+          }
+          long start = System.nanoTime();
+          executorWrapper.executorService.awaitTermination(timeLeft, NANOSECONDS);
+          timeLeft -= (System.nanoTime() - start);
+        }
+      }
+    }
+    catch (InterruptedException ie) {
+      // If current thread is interrupted then interrupt all others if was supposed to shutdown properly
+      for (ExecutorWrapper executorWrapper : executorWrappers) {
+        executorWrapper.executorService.shutdownNow();
+      }
+      // Preserve interrupt status
+      Thread.currentThread().interrupt();
+    }
   }
 
   // TODO check from https://docs.oracle.com/javase/7/docs/api/java/util/concurrent/ExecutorService.html on how to properly shutdown
