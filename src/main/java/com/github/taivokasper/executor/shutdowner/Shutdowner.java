@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 import static java.util.concurrent.TimeUnit.*;
 
 class Shutdowner implements MultiTimeoutExecutorServiceContainer, SingleTimeoutExecutorServiceContainer {
-  private final List<ExecutorWrapper> executorWrappers;
+  final List<ExecutorWrapper> executorWrappers;
 
   Shutdowner(List<ExecutorWrapper> list) {
     this.executorWrappers = list;
