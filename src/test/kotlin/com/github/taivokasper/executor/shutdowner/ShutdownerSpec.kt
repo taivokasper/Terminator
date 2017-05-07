@@ -1,11 +1,13 @@
 package com.github.taivokasper.executor.shutdowner
 
+import com.github.taivokasper.executor.shutdowner.ShutdownerFixture.idleExecutor
+import com.github.taivokasper.executor.shutdowner.ShutdownerFixture.workingInterruptableExecutor
 import com.winterbe.expekt.should
 import org.jetbrains.spek.api.dsl.context
 import org.jetbrains.spek.api.dsl.it
 import org.jetbrains.spek.subject.SubjectSpek
-import java.lang.Exception
-import java.util.concurrent.*
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.TimeUnit
 
 class SingleTimeoutSpec : SubjectSpek<SingleTimeoutExecutorServiceContainer>({
   subject { ShutdownFactory.createSingleTimeoutContainer() }
@@ -70,10 +72,11 @@ class SingleTimeoutSpec : SubjectSpek<SingleTimeoutExecutorServiceContainer>({
         subject.terminate(5, TimeUnit.MILLISECONDS)
       }
 
-      // Unset the set interrupt
+      // Unset the set interrupt so that the thread running tests wouldn't stop
       afterEachTest {
         try {
           Thread.sleep(1)
+          throw IllegalStateException("Interrupt was not thrown!")
         }
         catch (ie: InterruptedException) {
 
@@ -124,6 +127,7 @@ class MultiTimeoutSpec : SubjectSpek<MultiTimeoutExecutorServiceContainer>({
   }
 })
 
+// Helper so that the unit test can access the internal state
 fun SingleTimeoutExecutorServiceContainer.nrOfServices(): Int {
   if (this is Shutdowner) {
     return this.executorWrappers.size
@@ -131,6 +135,7 @@ fun SingleTimeoutExecutorServiceContainer.nrOfServices(): Int {
   throw IllegalStateException("Invalid type")
 }
 
+// Helper so that the unit test can access the internal state
 fun MultiTimeoutExecutorServiceContainer.nrOfServices(): Int {
   if (this is Shutdowner) {
     return this.executorWrappers.size
@@ -138,33 +143,7 @@ fun MultiTimeoutExecutorServiceContainer.nrOfServices(): Int {
   throw IllegalStateException("Invalid type")
 }
 
-fun idleExecutor(): ExecutorService {
-  return Executors.newSingleThreadExecutor()
-}
-
-val whileTrueSleep: () -> TimestampedException = work@ {
-  while (true) {
-    try {
-      Thread.sleep(50)
-    } catch (e: InterruptedException) {
-      return@work TimestampedException(e, System.nanoTime())
-    }
-  }
-  // This cannot happen but the compiler is not smart enough
-  return@work TimestampedException(IllegalStateException("Something went wrong"), System.nanoTime())
-}
-
-fun workingInterruptableExecutor(): ExecutorWork {
-  val exec = Executors.newSingleThreadExecutor()
-  val future = FutureTask(whileTrueSleep)
-  exec.execute(future)
-  return ExecutorWork(future, exec)
-}
-
 fun ExecutorService.assertShutdownAndTerminated() {
   this.isShutdown.should.`true`
   this.isTerminated.should.`true`
 }
-
-data class ExecutorWork(val timestampedException: Future<TimestampedException>, val exec: ExecutorService)
-data class TimestampedException(val exception: Exception, val time: Long)
