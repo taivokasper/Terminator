@@ -1,7 +1,5 @@
-package com.github.taivokasper.executor.shutdowner
+package com.github.taivokasper.executor.service.terminator
 
-import com.github.taivokasper.executor.shutdowner.ShutdownerFixture.idleExecutor
-import com.github.taivokasper.executor.shutdowner.ShutdownerFixture.workingInterruptableExecutor
 import com.winterbe.expekt.should
 import org.jetbrains.spek.api.dsl.context
 import org.jetbrains.spek.api.dsl.it
@@ -9,18 +7,18 @@ import org.jetbrains.spek.subject.SubjectSpek
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.TimeUnit
 
-class SingleTimeoutSpec : SubjectSpek<SingleTimeoutExecutorServiceContainer>({
-  subject { ShutdownFactory.createSingleTimeoutContainer() }
+class SingleTimeoutSpec : SubjectSpek<EqualTerminator>({
+  subject { TerminatorFactory.createEqualTerminator() }
 
   context("Idle executor services") {
     val services = arrayOf(
-        idleExecutor(),
-        idleExecutor(),
-        idleExecutor()
+        ShutdownerFixture.idleExecutor(),
+        ShutdownerFixture.idleExecutor(),
+        ShutdownerFixture.idleExecutor()
     )
     beforeEachTest {
       services.forEach {
-        subject.addShutdownItem(it)
+        subject.addItem(it)
       }
     }
 
@@ -38,13 +36,13 @@ class SingleTimeoutSpec : SubjectSpek<SingleTimeoutExecutorServiceContainer>({
 
   context("Working executors interrupted") {
     val workingExecutors = arrayOf(
-        workingInterruptableExecutor(),
-        workingInterruptableExecutor(),
-        workingInterruptableExecutor()
+        ShutdownerFixture.workingInterruptableExecutor(),
+        ShutdownerFixture.workingInterruptableExecutor(),
+        ShutdownerFixture.workingInterruptableExecutor()
     )
     beforeEachTest {
       workingExecutors.forEach {
-        subject.addShutdownItem(it.exec)
+        subject.addItem(it.exec)
       }
     }
 
@@ -98,19 +96,19 @@ class SingleTimeoutSpec : SubjectSpek<SingleTimeoutExecutorServiceContainer>({
   }
 })
 
-class MultiTimeoutSpec : SubjectSpek<MultiTimeoutExecutorServiceContainer>({
-  subject { ShutdownFactory.createMultiTimeoutContainer() }
+class MultiTimeoutSpec : SubjectSpek<UnequalTerminator>({
+  subject { TerminatorFactory.createUnequalTerminator() }
 
   context("Idle executor services") {
     val services = arrayOf(
-        workingInterruptableExecutor(),
-        workingInterruptableExecutor(),
-        workingInterruptableExecutor()
+        ShutdownerFixture.workingInterruptableExecutor(),
+        ShutdownerFixture.workingInterruptableExecutor(),
+        ShutdownerFixture.workingInterruptableExecutor()
     )
     beforeEachTest {
-      subject.addShutdownItem(services[1].exec, 50, TimeUnit.MILLISECONDS)
-      subject.addShutdownItem(services[0].exec)
-      subject.addShutdownItem(services[2].exec, 100, TimeUnit.MILLISECONDS)
+      subject.addItem(services[1].exec, 50, TimeUnit.MILLISECONDS)
+      subject.addItem(services[0].exec)
+      subject.addItem(services[2].exec, 100, TimeUnit.MILLISECONDS)
     }
 
     it("Should add all services") {
@@ -128,16 +126,16 @@ class MultiTimeoutSpec : SubjectSpek<MultiTimeoutExecutorServiceContainer>({
 })
 
 // Helper so that the unit test can access the internal state
-fun SingleTimeoutExecutorServiceContainer.nrOfServices(): Int {
-  if (this is Shutdowner) {
+fun EqualTerminator.nrOfServices(): Int {
+  if (this is Terminator) {
     return this.executorWrappers.size
   }
   throw IllegalStateException("Invalid type")
 }
 
 // Helper so that the unit test can access the internal state
-fun MultiTimeoutExecutorServiceContainer.nrOfServices(): Int {
-  if (this is Shutdowner) {
+fun UnequalTerminator.nrOfServices(): Int {
+  if (this is Terminator) {
     return this.executorWrappers.size
   }
   throw IllegalStateException("Invalid type")

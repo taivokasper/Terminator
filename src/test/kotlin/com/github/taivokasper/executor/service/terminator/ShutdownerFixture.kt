@@ -1,4 +1,4 @@
-package com.github.taivokasper.executor.shutdowner
+package com.github.taivokasper.executor.service.terminator
 
 import java.lang.Exception
 import java.util.concurrent.ExecutorService

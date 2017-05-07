@@ -1,4 +1,4 @@
-package com.github.taivokasper.executor.shutdowner;
+package com.github.taivokasper.executor.service.terminator;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;

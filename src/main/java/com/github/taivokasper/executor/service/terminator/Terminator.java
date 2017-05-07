@@ -1,4 +1,4 @@
-package com.github.taivokasper.executor.shutdowner;
+package com.github.taivokasper.executor.service.terminator;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,21 +9,21 @@ import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.TimeUnit.*;
 
-class Shutdowner implements MultiTimeoutExecutorServiceContainer, SingleTimeoutExecutorServiceContainer {
+class Terminator implements UnequalTerminator, EqualTerminator {
   final List<ExecutorWrapper> executorWrappers;
 
-  Shutdowner(List<ExecutorWrapper> list) {
+  Terminator(List<ExecutorWrapper> list) {
     this.executorWrappers = list;
   }
 
   @Override
-  public synchronized Shutdowner addShutdownItem(ExecutorService executorService) {
+  public synchronized Terminator addItem(ExecutorService executorService) {
     executorWrappers.add(new ExecutorWrapper(executorService, 0, SECONDS));
     return this;
   }
 
   @Override
-  public synchronized Shutdowner addShutdownItem(ExecutorService executorService, long time, TimeUnit timeUnit) {
+  public synchronized Terminator addItem(ExecutorService executorService, long time, TimeUnit timeUnit) {
     executorWrappers.add(new ExecutorWrapper(executorService, time, timeUnit));
     return this;
   }
