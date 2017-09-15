@@ -1,1 +1,3 @@
 rootProject.name = 'executor-shutdowner'
+
+include ':terminator'
