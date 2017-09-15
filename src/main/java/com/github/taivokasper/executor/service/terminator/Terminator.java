@@ -28,8 +28,11 @@ class Terminator implements UnequalTerminator, EqualTerminator {
     return this;
   }
 
+  // The following termination logic is partly from:
+  // https://docs.oracle.com/javase/7/docs/api/java/util/concurrent/ExecutorService.html
+
   @Override
-  public synchronized void terminate(long time, TimeUnit timeUnit) throws InterruptedException {
+  public synchronized void terminate(long time, TimeUnit timeUnit) {
     List<ExecutorWrapper> executorWrappers = new ArrayList<ExecutorWrapper>(this.executorWrappers);
     for (ExecutorWrapper executorWrapper : executorWrappers) {
       executorWrapper.executorService.shutdown();
@@ -67,9 +70,8 @@ class Terminator implements UnequalTerminator, EqualTerminator {
     }
   }
 
-  // TODO check from https://docs.oracle.com/javase/7/docs/api/java/util/concurrent/ExecutorService.html on how to properly shutdown
   @Override
-  public synchronized void terminate() throws InterruptedException {
+  public synchronized void terminate() {
     List<ExecutorWrapper> executorWrappers = new ArrayList<ExecutorWrapper>(this.executorWrappers);
     Collections.sort(executorWrappers, new Comparator<ExecutorWrapper>() {
       @Override
