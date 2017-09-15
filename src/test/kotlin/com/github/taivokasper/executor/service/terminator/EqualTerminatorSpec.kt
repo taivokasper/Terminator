@@ -66,6 +66,7 @@ class EqualTerminatorSpec : SubjectSpek<EqualTerminator>({
 
     context("Main execution thread interrupted while shutting down") {
       beforeEachTest {
+        // Set interrupt flag to main running thread
         Thread.currentThread().interrupt()
         subject.terminate(5, TimeUnit.MILLISECONDS)
       }
