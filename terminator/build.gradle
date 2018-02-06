@@ -18,6 +18,8 @@ repositories {
   }
 }
 
+version = project.property('libraryVersion')
+
 compileJava {
   sourceCompatibility = 1.6
   targetCompatibility = 1.6
@@ -39,4 +41,8 @@ dependencies {
     exclude group: 'org.jetbrains.kotlin'
   }
   testCompile "com.winterbe:expekt:0.5.0"
+}
+
+if (new File("$rootDir/release.gradle").exists()) {
+  apply from: "$rootDir/release.gradle"
 }

@@ -1,0 +1,64 @@
+ext {
+    bintrayRepo = 'Maven'
+    bintrayName = 'Terminator'
+    orgName = 'taivokasper'
+
+    publishedGroupId = 'com.github.taivokasper'
+    artifact = 'terminator'
+
+    libraryName = 'Terminator'
+    libraryDescription = 'Terminate java executor services wih ease'
+
+    siteUrl = 'https://github.com/taivokasper/Terminator'
+    gitUrl = 'https://github.com/taivokasper/Terminator.git'
+
+    developerId = 'taivokasper'
+    developerName = 'Taivo Käsper'
+    developerEmail = 'taivo.kasper@gmail.com'
+
+    licenseName = 'MIT License'
+    licenseUrl = 'https://opensource.org/licenses/MIT'
+    allLicenses = ["MIT"]
+}
+
+apply plugin: 'com.jfrog.bintray'
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives javadocJar
+    archives sourcesJar
+}
+
+if (project.hasProperty('bintray_user') && project.hasProperty('bintray_api_key')) {
+    def bintrayUser = project.property('bintray_user')
+    def bintrayApiKey = project.property("bintray_api_key")
+
+    bintray {
+        user = bintrayUser
+        key = bintrayApiKey
+        override = true
+        configurations = ['archives']
+        pkg {
+            repo = bintrayRepo
+            name = bintrayName
+            desc = libraryDescription
+            websiteUrl = siteUrl
+            vcsUrl = gitUrl
+            licenses = ['MIT']
+            publish = true
+            publicDownloadNumbers = true
+            version {
+                desc = libraryDescription
+            }
+        }
+    }
+}
