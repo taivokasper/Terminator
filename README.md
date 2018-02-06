@@ -1,4 +1,7 @@
 # Terminator
+[![Build Status](https://travis-ci.org/taivokasper/Terminator.svg?branch=master)](https://travis-ci.org/taivokasper/Terminator)
+[ ![Download](https://api.bintray.com/packages/taivokasper/maven/Terminator/images/download.svg) ](https://bintray.com/taivokasper/maven/Terminator/_latestVersion)
+
 Terminator is a small Java library for easing the process of shutting down multiple executor services in parallel without extra threads.
 
 I saw that often times Java executor services are not shut down in a 
