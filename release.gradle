@@ -1,7 +1,11 @@
 ext {
-    bintrayRepo = 'Maven'
+    developerId = 'taivokasper'
+    developerName = 'Taivo Käsper'
+    developerEmail = 'taivo.kasper@gmail.com'
+
+    bintrayRepo = 'maven'
     bintrayName = 'Terminator'
-    orgName = 'taivokasper'
+    orgName = developerId
 
     publishedGroupId = 'com.github.taivokasper'
     artifact = 'terminator'
@@ -12,16 +16,13 @@ ext {
     siteUrl = 'https://github.com/taivokasper/Terminator'
     gitUrl = 'https://github.com/taivokasper/Terminator.git'
 
-    developerId = 'taivokasper'
-    developerName = 'Taivo Käsper'
-    developerEmail = 'taivo.kasper@gmail.com'
-
     licenseName = 'MIT License'
     licenseUrl = 'https://opensource.org/licenses/MIT'
     allLicenses = ["MIT"]
 }
 
 apply plugin: 'com.jfrog.bintray'
+apply plugin: 'maven-publish'
 
 task sourcesJar(type: Jar) {
     from sourceSets.main.allSource
@@ -38,6 +39,47 @@ artifacts {
     archives sourcesJar
 }
 
+def pomConfig = {
+    licenses {
+        license {
+            name licenseName
+            url licenseUrl
+        }
+    }
+    developers {
+        developer {
+            id developerId
+            name developerName
+            email developerEmail
+        }
+    }
+
+    scm {
+        url gitUrl
+    }
+}
+
+// Create the publication with the pom configuration:
+publishing {
+    publications {
+        BintrayPublication(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+            groupId publishedGroupId
+            artifactId artifact
+            version project.property('libraryVersion')
+            pom.withXml {
+                def root = asNode()
+                root.appendNode('description', libraryDescription)
+                root.appendNode('name', libraryName)
+                root.appendNode('url', siteUrl)
+                root.children().last() + pomConfig
+            }
+        }
+    }
+}
+
 if (project.hasProperty('bintray_user') && project.hasProperty('bintray_api_key')) {
     def bintrayUser = project.property('bintray_user')
     def bintrayApiKey = project.property("bintray_api_key")
@@ -45,15 +87,15 @@ if (project.hasProperty('bintray_user') && project.hasProperty('bintray_api_key'
     bintray {
         user = bintrayUser
         key = bintrayApiKey
+        publications = ['BintrayPublication']
         override = true
-        configurations = ['archives']
         pkg {
             repo = bintrayRepo
             name = bintrayName
             desc = libraryDescription
             websiteUrl = siteUrl
             vcsUrl = gitUrl
-            licenses = ['MIT']
+            licenses = allLicenses
             publish = true
             publicDownloadNumbers = true
             version {
