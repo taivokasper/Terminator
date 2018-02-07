@@ -37,9 +37,7 @@ unequalTerminator.terminate();
 * Gradle
 ```
 repositories {
-  maven {
-    url  "https://dl.bintray.com/taivokasper/maven"
-  }
+  jcenter()
 }
 dependencies {
   compile 'com.github.taivokasper:terminator:0.1'
@@ -49,9 +47,8 @@ dependencies {
 ```
 <repositories>
   <repository>
-    <id>taivo-bintray</id>
-    <name>Taivo's bintray repository</name>
-    <url>https://dl.bintray.com/taivokasper/maven</url>
+    <id>jcenter</id>
+    <url>http://jcenter.bintray.com</url>
   </repository>
 </repositories>
 
