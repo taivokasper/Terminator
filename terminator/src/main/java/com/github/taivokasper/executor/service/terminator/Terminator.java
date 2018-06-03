@@ -1,13 +1,13 @@
 package com.github.taivokasper.executor.service.terminator;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static java.util.concurrent.TimeUnit.*;
+import static java.util.concurrent.TimeUnit.NANOSECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 class Terminator implements UnequalTerminator, EqualTerminator {
   final List<ExecutorWrapper> executorWrappers;
@@ -33,7 +33,6 @@ class Terminator implements UnequalTerminator, EqualTerminator {
 
   @Override
   public synchronized void terminate(long time, TimeUnit timeUnit) {
-    List<ExecutorWrapper> executorWrappers = new ArrayList<ExecutorWrapper>(this.executorWrappers);
     for (ExecutorWrapper executorWrapper : executorWrappers) {
       executorWrapper.executorService.shutdown();
     }
@@ -72,7 +71,6 @@ class Terminator implements UnequalTerminator, EqualTerminator {
 
   @Override
   public synchronized void terminate() {
-    List<ExecutorWrapper> executorWrappers = new ArrayList<ExecutorWrapper>(this.executorWrappers);
     Collections.sort(executorWrappers, new Comparator<ExecutorWrapper>() {
       @Override
       public int compare(ExecutorWrapper e1, ExecutorWrapper e2) {
